@@ -1,44 +1,81 @@
-const BASE = import.meta.env.VITE_API_URL || "/api";
+const BASE = import.meta.env.VITE_API_URL || "/api/v1";
+
+const apiKey = import.meta.env.VITE_API_KEY;
+const aiProvider = import.meta.env.VITE_AI_PROVIDER;
+const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+const buildHeaders = (extra = {}) => {
+  const headers = { ...extra };
+  if (apiKey) headers["X-API-Key"] = apiKey;
+  if (aiProvider) headers["X-AI-Provider"] = aiProvider;
+  if (geminiKey) headers["X-Gemini-Key"] = geminiKey;
+  return headers;
+};
+
+const buildQuery = (params = {}) => {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      query.set(key, String(value));
+    }
+  });
+  const queryString = query.toString();
+  return queryString ? `?${queryString}` : "";
+};
 
 const handleResponse = async (res) => {
-  const data = await res.json();
+  const data = await res.json().catch(() => ({}));
 
   if (!res.ok || !data.success) {
-    throw new Error(data.error || "API error");
+    throw new Error(data.error || `API error (${res.status})`);
   }
 
   return data;
 };
 
 export const api = {
-  getNews: async (category = "", limit = 20) => {
-    const params = new URLSearchParams();
-    if (category) {
-      params.append("category", category);
-    }
-    params.append("limit", String(limit));
-
-    const res = await fetch(`${BASE}/news?${params.toString()}`);
+  getStatus: async () => {
+    const res = await fetch(`${BASE}/status`, {
+      headers: buildHeaders(),
+    });
     return handleResponse(res);
   },
 
-  getArticle: async (id) => {
-    const res = await fetch(`${BASE}/news/${encodeURIComponent(id)}`);
+  getFilters: async () => {
+    const res = await fetch(`${BASE}/filters`, {
+      headers: buildHeaders(),
+    });
     return handleResponse(res);
   },
 
-  searchNews: async (query) => {
-    const res = await fetch(`${BASE}/news/search?q=${encodeURIComponent(query)}`);
+  getStocks: async ({ filter = "52-low", exchange = "BOTH", limit = 20, ai = false, params = {} } = {}) => {
+    const query = buildQuery({
+      filter,
+      exchange,
+      limit,
+      ai,
+      ...params,
+    });
+    const res = await fetch(`${BASE}/stocks${query}`, {
+      headers: buildHeaders(),
+    });
     return handleResponse(res);
   },
 
-  getStocks: async () => {
-    const res = await fetch(`${BASE}/stocks`);
+  screenStocks: async ({ filters = [], exchange = "BOTH", limit = 20, params = {}, ai = false } = {}) => {
+    const res = await fetch(`${BASE}/stocks/screen`, {
+      method: "POST",
+      headers: buildHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ filters, exchange, limit, params, ai }),
+    });
     return handleResponse(res);
   },
 
-  getStock: async (ticker) => {
-    const res = await fetch(`${BASE}/stocks/${encodeURIComponent(ticker)}`);
+  getStock: async (symbol, { exchange = "BOTH", ai = true } = {}) => {
+    const query = buildQuery({ exchange, ai });
+    const res = await fetch(`${BASE}/stocks/${encodeURIComponent(symbol)}${query}`, {
+      headers: buildHeaders(),
+    });
     return handleResponse(res);
   },
 };

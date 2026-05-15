@@ -1,61 +1,46 @@
-import cors from "cors";
-import dotenv from "dotenv";
 import express from "express";
+import cors from "cors";
 import helmet from "helmet";
-import rateLimit from "express-rate-limit";
-import newsRoutes from "./routes/news.js";
-import { initDatabase } from "./services/dbService.js";
-import stocksRoutes from "./routes/stocks.js";
-
-dotenv.config();
-initDatabase();
+import { config } from "./config/index.js";
+import { apiKeyAuth } from "./middleware/apiKey.js";
+import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
+import { standardRateLimit } from "./middleware/rateLimit.js";
+import adminRoutes from "./routes/v1/admin.js";
+import filterRoutes from "./routes/v1/filters.js";
+import statusRoutes from "./routes/v1/status.js";
+import stockRoutes from "./routes/v1/stocks.js";
+import { scheduleNightlyJob } from "./jobs/nightlyJob.js";
+import { connectDatabase } from "./services/cacheService.js";
+import { logger } from "./utils/logger.js";
 
 const app = express();
-const port = process.env.PORT || 5000;
 
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+    origin: config.corsOrigin === "*" ? true : config.corsOrigin,
   }),
 );
 app.use(express.json());
-app.use(
-  rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    standardHeaders: true,
-    legacyHeaders: false,
-  }),
-);
+app.use(standardRateLimit);
+app.use(apiKeyAuth);
 
-app.get("/health", (_req, res) => {
-  res.json({ success: true, status: "ok" });
-});
+app.use("/v1/stocks", stockRoutes);
+app.use("/v1/filters", filterRoutes);
+app.use("/v1/status", statusRoutes);
+app.use("/v1/admin", adminRoutes);
 
-app.use("/api/news", newsRoutes);
-app.use("/api/stocks", stocksRoutes);
+app.use(notFoundHandler);
+app.use(errorHandler);
 
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    error: "Route not found",
-    code: 404,
+connectDatabase(config.mongodbUri)
+  .then(() => {
+    scheduleNightlyJob();
+    app.listen(config.port, () => {
+      logger.info(`PriceEffect API running on port ${config.port}`);
+    });
+  })
+  .catch((error) => {
+    logger.error("Failed to start PriceEffect API", { error: error.message, stack: error.stack });
+    process.exit(1);
   });
-});
-
-app.use((error, _req, res, _next) => {
-  const status = error.status || 500;
-  const isProduction = process.env.NODE_ENV === "production";
-
-  res.status(status).json({
-    success: false,
-    error: error.message || "Internal server error",
-    code: status,
-    ...(isProduction ? {} : error.details ? { details: error.details } : {}),
-  });
-});
-
-app.listen(port, () => {
-  console.log(`Price Effect API running on port ${port}`);
-});

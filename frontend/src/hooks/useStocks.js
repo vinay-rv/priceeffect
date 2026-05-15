@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 
-export function useStocks() {
+export function useStocks(options = {}) {
+  const { filter = "52-low", exchange = "BOTH", limit = 20, params = {} } = options;
   const [stocks, setStocks] = useState([]);
+  const [meta, setMeta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -12,9 +14,10 @@ export function useStocks() {
 
     const loadStocks = async (preserveError = false) => {
       try {
-        const data = await api.getStocks();
+        const data = await api.getStocks({ filter, exchange, limit, ai: false, params });
         if (!cancelled) {
-          setStocks(data.data);
+          setStocks(data.data || []);
+          setMeta(data);
           if (!preserveError) {
             setError(null);
           }
@@ -42,10 +45,11 @@ export function useStocks() {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [reloadKey]);
+  }, [exchange, filter, limit, params, reloadKey]);
 
   return {
     stocks,
+    meta,
     loading,
     error,
     retry: () => setReloadKey((key) => key + 1),

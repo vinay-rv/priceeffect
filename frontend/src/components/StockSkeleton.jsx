@@ -2,7 +2,7 @@ export default function StockSkeleton() {
   return (
     <div className="sidebar">
       <div className="sidebar-header">
-        Stocks Affected <span>...</span>
+        Backend Analysis <span>...</span>
       </div>
 
       {[0, 1, 2, 3, 4].map((item) => (
@@ -20,7 +20,7 @@ export default function StockSkeleton() {
         </div>
       ))}
 
-      <div className="stock-skeleton-note">Analysing article with AI...</div>
+      <div className="stock-skeleton-note">Analysing stock with AI...</div>
     </div>
   );
 }

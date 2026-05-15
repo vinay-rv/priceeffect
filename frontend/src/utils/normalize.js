@@ -74,16 +74,30 @@ export function normalizeArticle(article, index = 0) {
 }
 
 export function normalizeStock(stock) {
-  const priceValue = typeof stock.price === "number" ? stock.price : Number(stock.livePrice || 0);
-  const changePercent = Number(stock.changePercent ?? 0);
+  const priceValue =
+    typeof stock.price === "number" ? stock.price : Number(stock.price?.current ?? stock.livePrice ?? stock.close ?? 0);
+  const changePercent = Number(stock.price?.change30d ?? stock.changePercent ?? 0);
+  const symbol = stock.symbol || stock.ticker || "";
+  const distanceFrom52Low = Number(stock.price?.distanceFrom52Low ?? 0);
+  const distanceFrom52High = Number(stock.price?.distanceFrom52High ?? 0);
+  const roe = Number(stock.fundamentals?.roe ?? 0);
+  const pe = Number(stock.fundamentals?.pe ?? 0);
+  const dir = stock.direction || stock.marketDirection || (changePercent >= 0 ? "up" : "down");
 
   return {
-    ticker: stock.ticker,
-    name: stock.name,
+    ticker: stock.exchange ? `${symbol}.${stock.exchange}` : symbol,
+    symbol,
+    exchange: stock.exchange,
+    name: stock.companyName || stock.name || symbol,
     price: Number.isFinite(priceValue) ? priceValue.toFixed(2) : "0.00",
     change: `${changePercent > 0 ? "+" : ""}${changePercent.toFixed(2)}%`,
-    dir: stock.direction || stock.marketDirection || "down",
-    impact: stock.impact || "medium",
-    sparks: Array.isArray(stock.sparks) && stock.sparks.length > 0 ? stock.sparks : [20, 22, 21, 24, 25, 26, 27],
+    dir,
+    impact: stock.impact || (roe >= 15 ? "high" : pe > 0 && pe <= 20 ? "medium" : "low"),
+    sparks:
+      Array.isArray(stock.sparks) && stock.sparks.length > 0
+        ? stock.sparks
+        : [distanceFrom52Low + 16, roe + 14, pe + 10, distanceFrom52High + 8, Math.abs(changePercent) + 20],
+    fundamentals: stock.fundamentals || {},
+    analysis: stock.analysis || null,
   };
 }
