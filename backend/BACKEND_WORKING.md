@@ -402,7 +402,7 @@ Important query params:
 
 ### `GET /v1/stocks/:symbol`
 
-Returns one stock detail and runs fresh AI by default.
+Returns one stock detail. AI is enabled by default, but the backend reuses cached analysis when it is still fresh.
 
 ```bash
 curl "http://localhost:3000/v1/stocks/AARTIPHARM?exchange=NSE&ai=true"
@@ -412,6 +412,12 @@ Set `ai=false` to avoid the AI call:
 
 ```bash
 curl "http://localhost:3000/v1/stocks/AARTIPHARM?exchange=NSE&ai=false"
+```
+
+Force a new AI analysis with:
+
+```bash
+curl "http://localhost:3000/v1/stocks/AARTIPHARM?exchange=NSE&ai=true&refreshAi=true"
 ```
 
 ### `POST /v1/stocks/screen`

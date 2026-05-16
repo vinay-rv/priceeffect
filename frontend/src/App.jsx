@@ -62,36 +62,27 @@ function Sparkline({ values, dir }) {
   );
 }
 
-function StockCard({ stock, index, onSelect }) {
+function StockCard({ stock, onSelect }) {
   const normalized = normalizeStock(stock);
   const fundamentals = normalized.fundamentals;
-  const category = index === 0 ? "featured" : index === 1 ? "wide" : index < 4 ? "mid" : "small";
   const verdict = normalized.analysis?.verdict || (normalized.dir === "up" ? "Momentum" : "Watchlist");
 
   return (
-    <article className={`news-card ${category}`} onClick={() => onSelect(stock)}>
+    <article className="news-card" onClick={() => onSelect(stock)}>
       <div className="card-arrow">↗</div>
 
       <div>
-        {category === "featured" ? <div className="illustration-box">{normalized.exchange || "EQ"}</div> : null}
-
         <div className="tag-row">
           <span className={`tag-dot ${normalized.dir === "up" ? "green" : "red"}`}></span>
           <span>{normalized.exchange || "BOTH"} · {verdict}</span>
         </div>
 
-        {category === "featured" ? (
-          <h2>{normalized.name}</h2>
-        ) : (
-          <h3>{normalized.name}</h3>
-        )}
+        <h3>{normalized.name}</h3>
 
-        {category !== "small" ? (
-          <p className="summary">
-            {normalized.ticker} trades at ₹{normalized.price}. P/E {formatNumber(fundamentals.pe)}, ROE{" "}
-            {formatNumber(fundamentals.roe, "%")}, debt/equity {formatNumber(fundamentals.debtToEquity)}.
-          </p>
-        ) : null}
+        <p className="summary">
+          {normalized.ticker} trades at ₹{normalized.price}. P/E {formatNumber(fundamentals.pe)}, ROE{" "}
+          {formatNumber(fundamentals.roe, "%")}, debt/equity {formatNumber(fundamentals.debtToEquity)}.
+        </p>
       </div>
 
       <div>
@@ -329,15 +320,15 @@ function App() {
           font-weight: 900;
         }
         .hero-stats {
-          display: flex;
+          display: inline-flex;
           gap: 1px;
           background: var(--border);
           margin-top: 34px;
-          max-width: 840px;
+          max-width: 100%;
         }
         .hero-stat {
           background: #000;
-          min-width: 160px;
+          width: 200px;
           padding: 16px;
         }
         .hero-stat span {
@@ -390,46 +381,27 @@ function App() {
         }
         .news-grid {
           display: grid;
-          grid-template-columns: repeat(12, minmax(0, 1fr));
+          grid-template-columns: repeat(4, minmax(0, 1fr));
           gap: 1px;
           background: var(--border);
         }
         .news-card {
           position: relative;
           background: #000;
-          padding: 28px;
-          min-height: 240px;
+          padding: 24px;
+          min-height: 300px;
           cursor: pointer;
           transition: background 0.25s ease, transform 0.25s ease;
           display: flex;
           flex-direction: column;
           justify-content: space-between;
           overflow: hidden;
+          min-width: 0;
         }
         .news-card:hover { background: var(--surface); }
         .news-card:hover .card-arrow {
           opacity: 1;
           transform: translate(0, 0);
-        }
-        .featured {
-          grid-column: span 5;
-          grid-row: span 2;
-          min-height: 100%;
-        }
-        .wide { grid-column: span 7; }
-        .mid { grid-column: span 4; }
-        .small { grid-column: span 3; }
-        .illustration-box {
-          height: 180px;
-          border: 1px solid rgba(232, 255, 0, 0.12);
-          background:
-            radial-gradient(circle at 30% 20%, rgba(232, 255, 0, 0.2), transparent 35%),
-            linear-gradient(135deg, rgba(26, 26, 26, 1), rgba(17, 17, 17, 1));
-          display: grid;
-          place-items: center;
-          font-family: 'DM Mono', monospace;
-          font-size: 42px;
-          margin-bottom: 24px;
         }
         .card-arrow {
           position: absolute;
@@ -460,23 +432,20 @@ function App() {
         }
         .tag-dot.red { background: var(--red); }
         .tag-dot.green { background: var(--green); }
-        .news-card h2,
         .news-card h3 {
-          margin: 0 0 16px;
+          margin: 0 0 14px;
           font-family: 'Playfair Display', serif;
           font-weight: 700;
-          line-height: 1.06;
+          font-size: 28px;
+          line-height: 1.02;
+          overflow-wrap: anywhere;
         }
-        .featured h2 { font-size: 40px; }
-        .wide h3 { font-size: 34px; }
-        .mid h3 { font-size: 28px; }
-        .small h3 { font-size: 22px; }
         .summary {
           margin: 0 0 22px;
           color: var(--muted);
           font-size: 13px;
           line-height: 1.6;
-          max-width: 96%;
+          max-width: 100%;
         }
         .badges {
           display: flex;
@@ -808,6 +777,12 @@ function App() {
           to { transform: translateX(100%); }
         }
 
+        @media (max-width: 1200px) {
+          .news-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+          }
+        }
+
         @media (max-width: 900px) {
           .header {
             height: auto;
@@ -837,19 +812,21 @@ function App() {
             overflow-x: auto;
           }
           .news-grid {
-            grid-template-columns: repeat(6, minmax(0, 1fr));
-          }
-          .featured,
-          .wide,
-          .mid,
-          .small {
-            grid-column: span 6;
-            grid-row: auto;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
           }
           .detail-layout { grid-template-columns: 1fr; }
           .sidebar { position: static; }
           .metric-list { grid-template-columns: 1fr; }
           .ticker-live { margin-left: 12px; }
+        }
+
+        @media (max-width: 560px) {
+          .news-grid {
+            grid-template-columns: 1fr;
+          }
+          .news-card {
+            min-height: 260px;
+          }
         }
       `}</style>
 

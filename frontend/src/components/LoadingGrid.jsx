@@ -1,21 +1,16 @@
-const skeletonLayout = ["featured", "wide", "mid", "mid", "small", "small"];
+const skeletonItems = Array.from({ length: 8 }, (_, index) => index);
 
 export default function LoadingGrid() {
   return (
     <div className="news-grid">
-      {skeletonLayout.map((layout, index) => (
-        <article key={`${layout}-${index}`} className={`news-card ${layout} skeleton-card`}>
+      {skeletonItems.map((item) => (
+        <article key={item} className="news-card skeleton-card">
           <div>
-            {layout === "featured" ? <div className="illustration-box skeleton-block"></div> : null}
             <div className="skeleton-line skeleton-tag"></div>
             <div className="skeleton-line skeleton-title"></div>
             <div className="skeleton-line skeleton-title short"></div>
-            {layout !== "small" ? (
-              <>
-                <div className="skeleton-line skeleton-copy"></div>
-                <div className="skeleton-line skeleton-copy short"></div>
-              </>
-            ) : null}
+            <div className="skeleton-line skeleton-copy"></div>
+            <div className="skeleton-line skeleton-copy short"></div>
           </div>
 
           <div>

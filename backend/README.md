@@ -150,12 +150,13 @@ curl "http://localhost:3000/v1/stocks?filter=52-low&exchange=BOTH&limit=20&ai=fa
 
 ### `GET /v1/stocks/:symbol`
 
-Returns a single-stock deep dive and runs fresh AI analysis unless `ai=false`.
+Returns a single-stock deep dive. AI is enabled by default and uses cached analysis when fresh. Pass `ai=false` to skip AI, or `refreshAi=true` to force a new analysis.
 
 | Query param | Required | Default | Description |
 | --- | --- | --- | --- |
 | `exchange` | no | any | `NSE`, `BSE`, or `BOTH` |
 | `ai` | no | `true` | Set `false` to skip AI |
+| `refreshAi` | no | `false` | Set `true` to force a new AI analysis |
 
 ```bash
 curl "http://localhost:3000/v1/stocks/RELIANCE?exchange=NSE" \

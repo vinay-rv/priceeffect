@@ -94,7 +94,8 @@ router.get("/:symbol", aiRateLimit, async (req, res, next) => {
       return;
     }
 
-    const analysed = await attachAnalysis([stock], "deep-dive", req, true);
+    const force = req.query.refreshAi === "true" || req.query.refreshAi === true;
+    const analysed = await attachAnalysis([stock], "deep-dive", req, force);
     res.json({ success: true, aiProvider: analysed.provider, data: analysed.data[0] });
   } catch (error) {
     next(error);
